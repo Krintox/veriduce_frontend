@@ -16,8 +16,8 @@ import Signup from './Components/Signup.jsx'
 import ProjectRegistration from './Components/ProjectRegistration.jsx'
 import MyTokens from './Components/MyTokens.jsx'
 
-// export const backendUrl = "http://localhost:7993";
-export const backendUrl = "https://veriduce-backend.onrender.com";
+export const backendUrl = "http://localhost:7993";
+// export const backendUrl = "https://veriduce-backend.onrender.com";
 
 function App() {
   const contracts = useSelector((state)=>state.data.contracts);
