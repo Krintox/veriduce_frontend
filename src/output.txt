@@ -1,0 +1,2742 @@
+E:\Bunny\Capstone_2025\web_portal\frontend\src\App.jsx  
+import './App.css'
+import Landing from './Components/Landing'
+import Ccdv from './Components/ccdv'
+import { Route, RouterProvider, createRoutesFromElements } from 'react-router-dom'
+import Layout from './Layout.jsx'
+import { createBrowserRouter } from 'react-router-dom';
+import Greencarbon from './Components/Greencarbon.jsx'
+import CarbonFootprintCalculator from './Components/CarbonFootprintCalculator.jsx'
+import Tokens from './Components/Tokens.jsx'
+import { useSelector, useDispatch } from 'react-redux'
+import { useEffect } from 'react'
+import { dataActions } from './store/data-slice'
+
+import "./App.css";
+import Signup from './Components/Signup.jsx'
+import ProjectRegistration from './Components/ProjectRegistration.jsx'
+import MyTokens from './Components/MyTokens.jsx'
+
+// export const backendUrl = "http://localhost:8000";
+export const backendUrl = "https://shecodes-1zv8.onrender.com";
+
+function App() {
+  const contracts = useSelector((state)=>state.data.contracts);
+  const dispatch = useDispatch();
+
+  const getContracts = async()=>{
+    try{
+      const response = await fetch(`${backendUrl}/contract/getAll`);
+      const data = await response.json();
+      console.log('data:', data);
+      if(data.success){
+        dispatch(dataActions.setContracts(data.contracts));
+      }
+    }
+    catch(err){
+      console.log('error:', err);
+    }
+  }
+
+  useEffect(()=>{
+    if(contracts.length === 0){
+      getContracts();
+    }
+  },[]);
+
+  const router = createBrowserRouter(
+
+    createRoutesFromElements(
+        <Route path='/' element = {<Layout />}>
+        <Route path='' element={<Landing />} />
+        <Route path='/token/:id' element={<Greencarbon />} />
+        <Route path='/tokens' element={<Tokens />}/>
+        <Route path='/calculate' element={<Ccdv />}/>
+        <Route path='/learn' element={<CarbonFootprintCalculator />}/>
+        {/* <Route path='/register' element={<Signup />} /> */}
+        <Route path='/register' element={<ProjectRegistration />} />
+        <Route path='/myBalance' element={<MyTokens />} />
+      </Route>
+    )
+   )  
+
+  return (
+    <>
+      <RouterProvider router = {router} />
+    </>
+  );
+}
+
+export default App;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Layout.jsx  
+import React from 'react'
+import { Outlet } from 'react-router-dom'
+import Footer from './Components/Footer'
+import Navbar from './Components/Navbar'
+
+function Layout() {
+  return (
+   <div className='w-[100vw] h-[100vh] flex flex-col justify-between'>
+   <Navbar />
+   <div className=''>
+   <Outlet/>
+   </div>
+   <Footer />
+   </div>
+  )
+}
+
+export default LayoutE:\Bunny\Capstone_2025\web_portal\frontend\src\main.jsx  
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App.jsx'
+import './index.css'
+import store from './store/index.js'
+import { Provider } from 'react-redux'
+
+// const router = createBrowserRouter(
+
+//   createRoutesFromElements(
+//       <Route path='/' element = {<Layout />}>
+//       <Route path='' element={<Landing />} />
+//       <Route path='/token/:id' element={<Greencarbon />} />
+//       <Route path='/tokens' element={<Tokens />}/>
+//       <Route path='/calculate' element={<Ccdv />}/>
+//       <Route path='/educate' element={<CarbonFootprintCalculator />}/>
+//     </Route>
+//   )
+//  )
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <Provider store={store}>
+
+    <App />
+    </Provider>
+
+  </React.StrictMode>,
+)
+E:\Bunny\Capstone_2025\web_portal\frontend\src\App.css  
+E:\Bunny\Capstone_2025\web_portal\frontend\src\index.css  
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+*{
+    background-color: rgb(243, 238, 238);
+}
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\CarbonCreditCalculator.jsx  
+import React, { useState } from "react";
+import Web3 from "web3"
+import OneTimeSaleToken from '../assets/OneTimeSaleToken.json'
+
+
+export const CarbonCreditCalculator = ({ price , contractAddress }) => {
+  const [quantity, setQuantity] = useState(1);
+  const total = quantity * price;
+
+  const web3 = new Web3(window.ethereum);
+  const contractInstance = new web3.eth.Contract(OneTimeSaleToken.abi,contractAddress);
+
+  const buyTokens = async ()=>{
+    const accounts = await web3.eth.getAccounts();
+        
+    await contractInstance.methods.buyToken(quantity).send({
+      from: accounts[0],
+      value: web3.utils.toWei(total, 'ether')
+    });
+  }
+
+  return (
+    <div className="flex flex-col bg-white rounded-md">
+      <div className="bg-white p-6 rounded-lg w-80">
+        <div className="flex flex-col mb-4 rounded-md p-3">
+          <label htmlFor="quantity" className="mb-2 font-semibold">
+            Quantity
+          </label>
+          <input
+            type="number"
+            id="quantity"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            className="p-2 border rounded"
+          />
+        </div>
+        <div className="flex flex-col mb-4 p-3 rounded-md">
+          <div className="flex justify-between mb-2">
+            <span className="font-semibold">Price per unit</span>
+            <div className="p-2 rounded">{price} ETH</div>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-semibold">Total</span>
+            <div className="p-2 rounded">{total} ETH</div>
+          </div>
+        </div>
+        <button className="mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600" onClick={buyTokens}>
+          Buy Tokens
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CarbonCreditCalculator;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\CarbonFootprintCalculator.jsx  
+import React from "react";
+import "./CarbonFootprintCalculator.css";
+
+const CarbonFootprintCalculator = () => {
+  return (
+    <div className="calculator">
+      <h1 className="text-4xl font-bold	">Carbon Footprint Calculator</h1>
+      <div className="section">
+        <h2 className="font-bold text-xl mt-2">Transportation</h2>
+        <div className="formula-box ">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">Car Emissions (kg CO₂):</strong>
+          </p>
+          <p className="bg-transparent">
+            Car Emissions = (Total Kilometers Driven / Fuel Efficiency (km/l)) ×
+            Emission Factor (kg CO₂ per liter)
+          </p>
+        </div>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">
+              Public Transport Emissions (kg CO₂):
+            </strong>
+          </p>
+          <p className="bg-transparent">
+            Public Transport Emissions = Distance Traveled (km) × Emission
+            Factor (kg CO₂ per km)
+          </p>
+        </div>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">
+              Air Travel Emissions (kg CO₂):
+            </strong>
+          </p>
+          <p className="bg-transparent">
+            Air Travel Emissions = Flight Distance (km) × Emission Factor (kg
+            CO₂ per km)
+          </p>
+        </div>
+      </div>
+      <div className="section">
+        <h2 className="font-bold text-xl mt-2">Home Energy Use</h2>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">
+              Electricity Emissions (kg CO₂):
+            </strong>
+          </p>
+          <p className="bg-transparent">
+            Electricity Emissions = Annual kWh × Emission Factor (kg CO₂ per
+            kWh)
+          </p>
+        </div>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">
+              Heating Emissions (kg CO₂):
+            </strong>
+          </p>
+          <p className="bg-transparent">
+            Heating Emissions = Annual Consumption (kg) × Emission Factor (kg
+            CO₂ per kg of LPG)
+          </p>
+        </div>
+      </div>
+      <div className="section">
+        <h2 className="font-bold text-xl mt-2">Food Consumption</h2>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">Dietary Emissions:</strong>
+          </p>
+          <p className="bg-transparent">
+            Vegetarian Diet: 1.5 t CO₂e, Non-Vegetarian Diet: 2.0 t CO₂e
+          </p>
+        </div>
+      </div>
+      <div className="section">
+        <h2 className="font-bold text-xl mt-2">Goods and Services</h2>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">
+              Consumer Goods and Services Emissions (kg CO₂):
+            </strong>
+          </p>
+          <p className="bg-transparent">
+            Goods and Services Emissions = Annual Expenditure (INR) × Emission
+            Factor (kg CO₂ per INR)
+          </p>
+        </div>
+      </div>
+      <div className="section">
+        <h2 className="font-bold text-xl mt-2">Waste</h2>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">
+              Waste Emissions (kg CO₂):
+            </strong>
+          </p>
+          <p className="bg-transparent">
+            Waste Emissions = (Total Waste (kg) - Recycled Waste (kg)) ×
+            Emission Factor (kg CO₂ per kg of waste)
+          </p>
+        </div>
+      </div>
+      <div className="section total">
+        <h2 className="font-bold text-xl mt-2">
+          Total Annual Carbon Footprint
+        </h2>
+        <div className="formula-box">
+          <p className="bg-transparent">
+            <strong className="bg-transparent">
+              <p className="bg-transparent">Total Carbon Footprint (kg CO₂):</p>
+            </strong>{" "}
+            Total Carbon Footprint (kg CO₂) = Transportation Emissions + Home
+            Energy Emissions + Food Consumption Emissions + Goods and Services
+            Emissions + Waste Emissions
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CarbonFootprintCalculator;E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Cards.jsx  
+import React from 'react';
+
+const Cards = ({ cards }) => {
+  return (
+    <div className="flex gap-4">
+      {cards.map((card, index) => (
+        <div key={index} className="relative w-52 h-36 overflow-hidden rounded-lg">
+          <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 opacity-0 hover:opacity-100 transition-opacity duration-500">
+            <span className="text-white text-center">{card.message}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Cards;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ccdv.jsx  
+import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+
+const Ccdv = () => {
+  const [carKm, setCarKm] = useState(15000);
+  const [fuelEfficiency, setFuelEfficiency] = useState(15);
+  const [flights, setFlights] = useState([{ type: 'short-haul', distance: 1000 }, { type: 'long-haul', distance: 8000 }]);
+  const [electricityKwh, setElectricityKwh] = useState(1500);
+  const [totalWaste, setTotalWaste] = useState(800);
+  const [recycledWaste, setRecycledWaste] = useState(200);
+  const pageRef = useRef(null);
+
+  useEffect(() => {
+    if (pageRef.current) {
+      pageRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
+  const emissionFactors = {
+    petrol: 2.31,
+    publicTransport: 0.105,
+    shortHaulFlight: 0.15,
+    longHaulFlight: 0.115,
+    electricity: 0.82,
+    waste: 0.18,
+  };
+
+  const calculateEmissions = () => {
+    const carEmissions = (carKm / fuelEfficiency) * emissionFactors.petrol;
+    const flightEmissions = flights.reduce((total, flight) => {
+      const factor = flight.type === 'short-haul' ? emissionFactors.shortHaulFlight : emissionFactors.longHaulFlight;
+      return total + (flight.distance * factor);
+    }, 0);
+    const electricityEmissions = electricityKwh * emissionFactors.electricity;
+    const wasteEmissions = (totalWaste - recycledWaste) * emissionFactors.waste;
+
+    return {
+      transportation: carEmissions + flightEmissions,
+      homeEnergy: electricityEmissions,
+      waste: wasteEmissions,
+    };
+  };
+
+  const emissions = calculateEmissions();
+  const totalEmissions = Object.values(emissions).reduce((sum, value) => sum + value, 0);
+
+  const data = [
+    { name: 'Transportation', value: emissions.transportation },
+    { name: 'Home Energy', value: emissions.homeEnergy },
+    { name: 'Waste', value: emissions.waste },
+  ];
+
+  const COLORS = ['#FFFDD0', '#90EE90', '#006400'];
+
+  return (
+    <div className="flex flex-col items-center h-screen bg-gray-100 p-4" ref={pageRef}>
+      <h1 className="text-2xl font-bold mb-6">Carbon Emissions Calculator</h1>
+      <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl flex flex-col md:flex-row">
+        <div className="w-full md:w-1/2 p-4">
+          <InputRange label="Car Kilometers Driven" min="0" max="30000" value={carKm} onChange={setCarKm} unit="km" />
+          <InputRange label="Fuel Efficiency (km/l)" min="5" max="30" value={fuelEfficiency} onChange={setFuelEfficiency} unit="km/l" />
+          <InputRange label="Electricity Consumption (kWh)" min="0" max="5000" value={electricityKwh} onChange={setElectricityKwh} unit="kWh" />
+          <InputRange label="Total Waste (kg)" min="0" max="2000" value={totalWaste} onChange={setTotalWaste} unit="kg" />
+          <InputRange label="Recycled Waste (kg)" min="0" max="2000" value={recycledWaste} onChange={setRecycledWaste} unit="kg" />
+        </div>
+        <div className="w-full md:w-1/2 p-4 flex flex-col items-center">
+          <div className="w-full h-64">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} innerRadius={75} fill="#8884d8">
+                  {data.map((entry, index) => (
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="text-center mt-4">Total Annual Carbon Emissions</p>
+          <p className="text-center text-green-600 font-bold">{totalEmissions.toFixed(2)} kg CO<sub>2</sub></p>
+          <div className="text-center mt-4">
+            <Link to="/learn" className="flex items-center">See how it's calculated</Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const InputRange = ({ label, min, max, value, onChange, unit }) => (
+  <div className="mb-4">
+    <label className="block text-gray-700">{label}</label>
+    <input
+      type="range"
+      min={min}
+      max={max}
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="w-full"
+    />
+    <div className="text-gray-500">{value} {unit}</div>
+  </div>
+);
+
+export default Ccdv;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Contract.jsx  
+export default function Contract({ contractId }){
+
+    return (
+        <div>
+
+        </div>
+    )
+}E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Direction.jsx  
+import React from "react";
+import DirectionAwareHover from "./ui/DirectionAwareHover";
+
+export function Direction() {
+  const imageUrl =
+    "https://images.pexels.com/photos/167698/pexels-photo-167698.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1";
+
+  return (
+    <div className="h-[40rem] relative flex items-center justify-center">
+      <DirectionAwareHover imageUrl={imageUrl}>
+      
+      </DirectionAwareHover>
+    </div>
+  );
+}
+
+export default Direction;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Footer.jsx  
+import React from 'react';
+
+const Footer = () => {
+  return (
+    <footer className="bg-transparent text-black py-6">
+      <div className="container mx-auto text-center">
+        <p className="mb-4">&copy; 2024 Your Company Name. All rights reserved.</p>
+        <ul className="flex justify-center space-x-6">
+          <li><a href="/privacy-policy" className="text-black hover:underline">Privacy Policy</a></li>
+          <li><a href="/terms-of-service" className="text-black hover:underline">Terms of Service</a></li>
+          <li><a href="/contact-us" className="text-black hover:underline">Contact Us</a></li>
+        </ul>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Greencarbon.jsx  
+import React, { useEffect } from "react";
+import { MdOutlineForest } from "react-icons/md";
+import LineChart from "./LineChart";
+
+import CarbonCreditCalculator from "./CarbonCreditCalculator";
+
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import { backendUrl } from "../App";
+import { dataActions } from "../store/data-slice";
+
+const Greencarbon = () => {
+  const { id } = useParams();
+  const thisContract = useSelector((state)=>state.data.thisContract);
+  const dispatch = useDispatch();
+
+  const contracts = useSelector((state)=>state.data.contracts);
+  const contract = contracts.find((contract)=>contract.address === id);
+
+  const metaDataToken = contract?.metaData;
+  console.log('metaDataToken:', metaDataToken);
+
+  const getProjectData = async()=>{
+    try{
+      console.log(contracts.length);
+      if(contracts.length !== 0){
+        const response = await fetch(`${backendUrl}/contract/get/${metaDataToken}`);
+        const data = await response.json();
+        if(data.success){
+          dispatch(dataActions.setThisContract({
+            ...data.contract,
+            metaData : data.metaData
+          }));
+        }
+      }
+    }
+    catch(err){
+      console.log('error:', err);
+    }
+  }
+
+  const navigate = useNavigate();
+
+  useEffect(()=>{
+    if(contract){
+      getProjectData();
+    }
+    else{
+      navigate('/tokens')
+    }
+  },[]);
+
+  useEffect(()=>{
+    console.log(thisContract);
+  },[thisContract])
+
+  // if(this)
+
+  // // const totalCredits = 1000;
+  // // const soldCredits = 150;
+  // const remainingCreditsPercentage = ((thisContract.totalSupply - thisContract.availableTokens) / totalCredits) * 100;
+
+  return (
+    <div>
+     
+      {thisContract && <main>
+        <div className="p-6">
+          <h1 className="text-3xl font-bold mb-14 text-center ">
+            { contract.name } : { contract.symbol }
+          </h1>
+          <div className="mb-4">
+            <p className="font-bold pl-[80px]">
+              Carbon credits generated: {Number(contract.initialSupply)}
+            </p>
+            <p className="font-bold pl-[80px]">
+              Credits sold: {Number(contract.initialSupply) - Number(contract.availableTokens)}
+            </p>
+            <div className="relative pt-2 pl-[80px]">
+              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+                <div
+                  style={{ width: `${((contract.initialSupply - contract.availableTokens))/contract.initialSupply*100}%` }}
+                  className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500 "
+                ></div>
+              </div>
+              <p className="text-sm text-gray-500">
+                {(contract.availableTokens/contract.initialSupply)*100}% left
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-around">
+            <div>
+                <div className="mb-4">
+                <p className="font-bold pl-[80px]">
+                  Contract Address : {contract.address}
+                </p>
+                <p className="font-bold pl-[80px]">
+                  Seller Address : {contract.payoutAddress}
+                </p>
+                </div>
+                <div>
+                  <h2 className="font-bold pl-[80px]">Proof Image :</h2>
+                  <img src={contract.metaData.image} className="h-50 w-50" />
+                </div>
+            </div>
+            <div>
+            <CarbonCreditCalculator price={Number(contract.salePrice)} contractAddress={contract.address}/>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div>
+            
+          </div>
+        </div>
+      </main>}
+      {
+        !thisContract && <h1>Loading...</h1>
+      }
+      {/* <LineChart /> */}
+    </div>
+  );
+};
+
+export default Greencarbon;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Grids.jsx  
+"use client";
+import React, { useState, useRef, useEffect } from "react";
+import { LayoutGrid } from "./ui/LayoutGrid";
+
+export function LayoutGridDemo() {
+  return (
+    <div className="h-screen py-20 w-full">
+      <LayoutGrid cards={cards} />
+    </div>
+  );
+}
+
+const SkeletonOne = () => {
+  return (
+    <div>
+      <p className="font-bold text-4xl text-black">Empower Your Green Initiative</p>
+      <p className="font-normal text-base text-black"></p>
+      <p className="font-normal text-base my-4 max-w-lg text-black">
+      Enter your trees and watch your efforts turn into valuable carbon credits. Help the planet and get rewarded.
+      </p>
+    </div>
+  );
+};
+
+const SkeletonTwo = () => {
+  return (
+    <div>
+      <p className="font-bold text-4xl text-black">Sell Your Carbon Credits</p>
+      <p className="font-normal text-base text-black"></p>
+      <p className="font-normal text-base my-4 max-w-lg text-black">
+      Turn your environmental stewardship into profit. List your carbon credits for companies eager to reduce their carbon footprint.
+      </p>
+    </div>
+  );
+};
+const SkeletonThree = () => {
+  return (
+    <div>
+      <p className="font-bold text-4xl text-black">Connect with Eco-Conscious Companies</p>
+      <p className="font-normal text-base text-black"></p>
+      <p className="font-normal text-base my-4 max-w-lg text-black">
+      Join forces with companies committed to sustainability. Your carbon credits are the key to a greener future.
+      </p>
+    </div>
+  );
+};
+const SkeletonFour = () => {
+  return (
+    <div>
+      <p className="font-bold text-4xl text-black">Make a Positive Impact</p>
+      <p className="font-normal text-base text-black"></p>
+      <p className="font-normal text-base my-4 max-w-lg text-black">
+      Every tree counts. Raise your carbon credits and play a crucial role in combating climate change.
+      </p>
+    </div>
+  );
+};
+
+const cards = [
+  {
+    id: 1,
+    content: <SkeletonOne />,
+    className: "md:col-span-2",
+    thumbnail:
+      "https://images.unsplash.com/photo-1476231682828-37e571bc172f?q=80&w=3474&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
+  {
+    id: 2,
+    content: <SkeletonTwo />,
+    className: "col-span-1",
+    thumbnail:
+      "https://images.unsplash.com/photo-1464457312035-3d7d0e0c058e?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
+  {
+    id: 3,
+    content: <SkeletonThree />,
+    className: "col-span-1",
+    thumbnail:
+      "https://images.pexels.com/photos/9754/mountains-clouds-forest-fog.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+  },
+  {
+    id: 4,
+    content: <SkeletonFour />,
+    className: "md:col-span-2",
+    thumbnail:
+      "https://images.unsplash.com/photo-1475070929565-c985b496cb9f?q=80&w=3540&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
+];
+export default LayoutGridDemo;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\HeroCard.jsx  
+"use client";
+
+import { motion } from "framer-motion";
+import React from "react";
+import AuroraBackground from "./ui/Hero";
+import { useNavigate } from "react-router-dom";
+
+ export function HeroCard() {
+
+  const navigate = useNavigate();
+
+  return (
+    
+    <AuroraBackground>
+      <motion.div
+        initial={{ opacity: 0.0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{
+          delay: 0.3,
+          duration: 0.8,
+          ease: "easeInOut",
+        }}
+        className="relative flex flex-col gap-4 items-center justify-center px-4  bg-transparent"
+      >
+        <div className="text-3xl md:text-7xl font-bold dark:text-white text-center bg-transparent">
+        Buy carbon credits
+        </div>
+        <div className="font-extralight text-base md:text-4xl dark:text-neutral-200 py-4 bg-transparent text-center">
+        Offset your carbon footprint with ECO, the first carbon offset token on Ethereum
+        </div>
+        <button className="bg-black dark:bg-white rounded-full w-fit text-white dark:text-black px-4 py-2"
+        onClick={()=>{
+          navigate('/tokens');
+        }}
+        >
+          Buy now
+        </button>
+      </motion.div>
+    </AuroraBackground>
+  );
+}
+export default HeroCard;E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Landing.jsx  
+import React from "react";
+import Cards from "./Cards";
+import { MdOutlineForest } from "react-icons/md";
+import HeroCard from "./HeroCard"; // Ensure you have this component correctly defined
+import { ThreeDCardDemo } from "./ThreeDCardDemo";
+import Footer from "./Footer";
+import Navbar from "./Navbar";
+import Grids from "./Grids";
+const Landing = () => {
+  const featuredProjects = [
+    // Add URLs for the featured project images
+  ];
+
+  const trendingProjects = [
+    // Add URLs for the trending project images
+  ];
+
+  const cardData = [
+    {
+      title: "Project 1",
+      imageUrl: "https://images.pexels.com/photos/9754/mountains-clouds-forest-fog.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      message: "Message for Project 1"
+    },
+    {
+      title: "Project 2",
+      imageUrl: "https://images.pexels.com/photos/418831/pexels-photo-418831.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      message: "Message for Project 2"
+    },
+    {
+      title: "Project 3",
+      imageUrl: "https://images.pexels.com/photos/167698/pexels-photo-167698.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      message: "Message for Project 3"
+    },
+    {
+      title: "Project 4",
+      imageUrl: "https://images.pexels.com/photos/1834399/pexels-photo-1834399.jpeg?auto=compress&cs=tinysrgb&w=600",
+      message: "Message for Project 4"
+    },
+    {
+      title: "Project 5",
+      imageUrl: "https://images.pexels.com/photos/1061623/pexels-photo-1061623.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+      message: "Message for Project 5"
+    }
+  ];
+
+  return (
+    <div>
+      
+
+      <main>
+        <HeroCard />
+        <h2 className="text-center text-5xl font-bold">Featured projects</h2>
+
+        <div className="p-8">
+          
+          <Grids />
+        </div>
+        <h1 className="text-center text-5xl font-bold m-3">Get Started</h1>
+        <div className="flex justify-center  gap-6 space-x-4">
+      <ThreeDCardDemo className="max-w-xs" />
+      <ThreeDCardDemo className="max-w-xs" />
+      <ThreeDCardDemo className="max-w-xs" />
+     
+    </div>
+    
+
+
+
+        {/* 
+        <section className="featured-projects">
+          <h3>Featured projects</h3>
+          <div className="project-cards">
+            {featuredProjects.map((url, index) => (
+              <img key={index} src={url} alt={`Featured project ${index + 1}`} />
+            ))}
+          </div>
+        </section>
+
+        <section className="trending-projects">
+          <h3>Discover trending projects</h3>
+          <div className="project-cards">
+            {trendingProjects.map((url, index) => (
+              <img key={index} src={url} alt={`Trending project ${index + 1}`} />
+            ))}
+          </div>
+        </section>
+
+        <section className="get-started">
+          <h3>Get started</h3>
+          <div className="cards">
+            {getStartedCards.map((card, index) => (
+              <Card key={index} title={card.title} description={card.description} imageUrl={card.imageUrl} />
+            ))}
+          </div>
+        </section>
+        */}
+      </main>
+
+      <style jsx>{`
+        .header {
+          display: flex;
+          justify-content: space-between;
+          padding: 1rem;
+        }
+
+        .hero {
+          text-align: center;
+          padding: 2rem;
+        }
+
+        .project-cards {
+          display: flex;
+          gap: 1rem;
+        }
+
+        .get-started .cards {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default Landing;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\LineChart.jsx  
+import React from "react";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const LineChart = () => {
+  const data = {
+    labels: ["January", "February", "March", "April", "May", "June", "July"],
+    datasets: [
+      {
+        label: "Carbon Credits Sold",
+        backgroundColor: "rgba(75,192,192,0.4)",
+        borderColor: "rgba(75,192,192,1)",
+        data: [65, 59, 80, 81, 56, 55, 40],
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+      },
+    },
+  };
+
+  return <Line className="max-w-md mx-auto" data={data} options={options} />;
+};
+
+export default LineChart;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\MyTokens.jsx  
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import Web3 from 'web3';
+import OneTimeSaleToken from '../assets/OneTimeSaleToken.json';
+import { dataActions } from '../store/data-slice';
+
+export default function MyTokens(){
+
+    const walletBalance = useSelector(state => state.data.walletBalance);
+    const contracts = useSelector(state => state.data.contracts);
+
+    const dispatch = useDispatch();
+
+    const wrapper = async ()=>{
+        let wallet = [];
+        for(let i=0;i<contracts.length;i++){
+            const contract = contracts[i];
+            console.log('contract:', contract);
+            const web3 = new Web3(window.ethereum);
+            const contractInstance = new web3.eth.Contract(OneTimeSaleToken.abi,contract.address);
+            const getTokens = async ()=>{
+                const accounts = await web3.eth.getAccounts();
+                const balance = await contractInstance.methods.balanceOf(accounts[0]).call();
+                console.log('balance:', balance);
+                if( balance > 0 ){
+                    wallet.unshift({
+                        ...contract,
+                        balance
+                    });
+                }
+            }
+            await getTokens();
+        }
+        console.log(wallet);
+        dispatch(dataActions.setWalletBalance(wallet));
+    }
+
+    useEffect(()=>{
+        if(walletBalance.length === 0){
+            wrapper();
+        }
+    },[contracts]);
+
+    async function handleRedemption(){};
+
+    return(
+        <>
+        <div className="text-2xl text-center font-semibold">My Wallet Balance</div>
+        {<div>
+            <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden my-4">
+            <thead className="bg-gray-100 text-gray-800 uppercase text-sm leading-normal">
+                <tr>
+                    <th className="py-3 px-6 text-left">Project / Institution</th>
+                    <th className="py-3 px-6 text-left">Symbol</th>
+                    <th className="py-3 px-6 text-left">Sale Price (ETH)</th>
+                    <th className="py-3 px-6 text-left">My Balance</th>
+                    <th className="py-3 px-6 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody className="text-gray-600 text-sm font-light">
+                {walletBalance.map((contract,index)=>{
+                    return (
+                        <tr className="border-b border-gray-200 hover:bg-gray-50" key={index}>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{contract.name}</td>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{contract.symbol}</td>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{parseFloat(contract.salePrice, 4)*84}$</td>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{String(contract.balance)}</td>
+                            <td className="py-3 px-6 text-center">
+                                <button onClick={handleRedemption} className="bg-green-400 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-full">
+                                    Redeem
+                                </button>
+                            </td>
+                        </tr>
+                    )
+                })}
+            </tbody>
+        </table>
+            </div>}
+        {!walletBalance && <div>Loading....</div>}
+        </>
+    )
+}E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Navbar.jsx  
+import React from 'react';
+import { MdOutlineForest } from 'react-icons/md';
+import {Link , NavLink, useNavigate} from 'react-router-dom';
+import { useRef } from 'react';
+
+import { useSelector, useDispatch } from 'react-redux';
+import { dataActions } from '../store/data-slice';
+import metamask from '../assets/metamask.png';
+
+const Navbar = () => {
+
+  const dispatch = useDispatch();
+  const walletAddress = useSelector((state) => state.data.walletAddress);
+
+  const connectWallet = async () => {
+    console.log('Requesting account...');
+
+    if(window.ethereum) {
+      console.log('MetaMask detected');
+
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        dispatch(dataActions.setWalletAddress(accounts[0]));
+      } catch (error) {
+        console.log('Error connecting...');
+      }
+
+    } else {
+      alert('Meta Mask not detected');
+    }
+  };
+
+  const connectWalletRef = useRef();
+  const navigate = useNavigate();
+
+  return (
+    <header className="bg-transparent text-black p-4 ">
+      <div className="container mx-auto flex justify-between items-center">
+        
+        <Link to="/" className="flex gap-2" >
+          <MdOutlineForest className="text-xl mt-1" />
+          <h1 className="font-bold text-xl">EcoTokens</h1>
+          </Link>
+       
+        <nav className="flex items-center gap-6 font-bold">
+
+          <NavLink 
+                                to="/tokens"
+                                    className={({isActive}) => //note that here class is written in backtisk '' and not in "" because we will change the classes in future according to our activity so to make it dynamic it is written in that way
+                                        `block py-2 pr-4 pl-3 duration-200 ${ isActive ? "text-[#3f4233]" : "text-gray-700"} border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-[#3f4233] lg:p-0`
+                                    }
+                                > 
+                                    Marketplace
+                                </NavLink>
+           <NavLink 
+                                to="/calculate"
+                                    className={({isActive}) => //note that here class is written in backtisk '' and not in "" because we will change the classes in future according to our activity so to make it dynamic it is written in that way
+                                        `block py-2 pr-4 pl-3 duration-200 ${ isActive ? "text-[#3f4233]" : "text-gray-700"} border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-[#3f4233] lg:p-0`
+                                    }
+                                > 
+                                    Personal Carbon 👣
+             </NavLink>
+             <NavLink 
+                                to="/register"
+                                    className={({isActive}) => //note that here class is written in backtisk '' and not in "" because we will change the classes in future according to our activity so to make it dynamic it is written in that way
+                                        `block py-2 pr-4 pl-3 duration-200 ${ isActive ? "text-[#3f4233]" : "text-gray-700"} border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-[#3f4233] lg:p-0`
+                                    }
+                                > 
+                                    List your 🍀 Credits
+                                </NavLink>
+                                <NavLink 
+                                to="/learn"
+                                    className={({isActive}) => //note that here class is written in backtisk '' and not in "" because we will change the classes in future according to our activity so to make it dynamic it is written in that way
+                                        `block py-2 pr-4 pl-3 duration-200 ${ isActive ? "text-[#3f4233]" : "text-gray-700"} border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0 hover:text-[#3f4233] lg:p-0`
+                                    }
+                                > 
+                                    Learn
+                                </NavLink>
+          {!walletAddress && <button className="bg-transparent  text-black py-2 px-4 rounded flex items-center gap-[2px] hover:bg-slate-300" onClick={connectWallet} ref={connectWalletRef}>Connect Wallet <img src={metamask} className='w-15'/></button>}
+          {
+            walletAddress && <button className='whitespace-nowrap' onClick={()=>{
+              navigate('/myBalance');
+            }}>{walletAddress}</button>
+          }
+        </nav>
+      </div>
+    </header>
+  );
+};
+
+export default Navbar;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ProjectRegistration.jsx  
+import React, { useEffect, useRef, useState } from "react";
+import { Label } from "./ui/Label";
+import { Input } from "./ui/Input";
+import { cn } from "../utils/cn";
+import { useDispatch, useSelector } from "react-redux";
+import { dataActions } from "../store/data-slice";
+import { backendUrl } from "../App";
+
+export function ProjectRegistration() {
+  const [file, setFile] = useState(null);
+  const [fileLink, setFileLink] = useState(null);
+  const [carbonCredits, setCarbonCredits] = useState(null);
+  const [metaData, setMetaData] = useState(null);
+
+  const [projectName, setProjectName] = useState("");
+  const [projectSymbol, setProjectSymbol] = useState("");
+  const [treeTypes, setTreeTypes] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
+  const [numberTrees, setNumberTrees] = useState(0);
+  const [circumference, setCircumference] = useState(50);
+  const [age, setAge] = useState(0);
+  const [price, setPrice] = useState(0);
+
+  const dispatch = useDispatch();
+  const inputRef = useRef();
+  const walletAddress = useSelector((state)=>state.data.walletAddress);
+
+  const connectWallet = async () => {
+    if(window.ethereum) {
+      console.log('MetaMask detected');
+
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        dispatch(dataActions.setWalletAddress(accounts[0]));
+      } catch (error) {
+        console.log('Error connecting...');
+      }
+
+    } else {
+      alert('Meta Mask not detected');
+    }
+  };
+
+  useEffect(()=>{
+    if(!walletAddress){
+      connectWallet();
+    }
+  },[]);
+
+  async function deployContract() {
+    const bodyData = {
+      name : projectName,
+      symbol : projectSymbol,
+      initialSupply : parseInt(carbonCredits),
+      salePrice : (parseFloat(price)*(Math.pow(10,18)))+"",
+      metaData : metaData._id,
+      payoutAddress : walletAddress
+    };
+
+    try {
+      const response = await fetch(`${backendUrl}/deploy/tokenContract`, {
+        method: "POST",
+        body: JSON.stringify(bodyData),
+        headers: { "Content-Type": "application/json" }
+      });
+      const res = await response.json();
+      alert(`${res.message} ${res.address}`);
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function sendMetaData() {
+    const bodyData = {
+      image: fileLink,
+      desc: projectName,
+      treeTypes: treeTypes.split(","),
+      lattitude : latitude,
+      longitude,
+      numberTrees: parseInt(numberTrees),
+      age: parseInt(age),
+      circumference: parseInt(circumference)
+    };
+
+    try {
+      const response = await fetch(`${backendUrl}/metaData/upload`, {
+        method: "POST",
+        body: JSON.stringify(bodyData),
+        headers: { "Content-Type": "application/json" }
+      });
+      const res = await response.json();
+      if(res.success){
+        setMetaData(res.metaData);
+        await getCarbonCredits();
+      }
+      else{
+        console.log("Something went wrong on the backend...");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function getCarbonCredits() {
+    let dryWeight = 6.31 * Math.pow(10, -6) * Math.pow(circumference, 3.7);
+    let carbonCredits = dryWeight * 1.835;
+    setCarbonCredits(carbonCredits);
+    console.log("Carbon Credits: ", carbonCredits);
+    await deployContract();
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    await sendMetaData();
+    // console.log(metaData);
+    // if(metaData){
+    //   await getCarbonCredits();
+    // }
+    // console.log(carbonCredits);
+    // if(carbonCredits && metaData){
+    //   await deployContract();
+    // }
+  };
+
+  const getFileLink = async () => {
+    if (file) {
+      console.log(file);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${backendUrl}/cloudinary/upload`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const res = await response.json();
+      if (res?.url) {
+        setFileLink(res.url);
+      } else {
+        console.log("Something went wrong on the backend...");
+      }
+    } else {
+      console.log("File not selected");
+    }
+  };
+
+  const handleGetCoordinates = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          setLatitude(latitude);
+          setLongitude(longitude);
+        },
+        (error) => {
+          console.error("Error getting coordinates: ", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  };
+
+  return (
+    <div className="flex justify-center items-center">
+      <div className="m-5">
+        <div className="h-[40rem] w-40rem min-w-[40rem] flex items-center justify-center overflow-hidden">
+          {fileLink ? (
+            <img
+              src={fileLink}
+              alt="preview"
+              className="object-cover h-full w-full"
+            />
+          ) : (
+            <div
+              className="h-full w-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center"
+              onClick={() => {
+                inputRef.current.click();
+              }}
+            >
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={(e) => {
+                  setFile(e.target.files[0]);
+                  getFileLink();
+                }}
+                ref={inputRef}
+              />
+              📸
+            </div>
+          )}
+        </div>
+      </div>
+      <div>
+        <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-transparent dark:bg-black">
+          <h2 className="font-bold text-xl text-neutral-800 dark:text-neutral-200">
+            New Project Registration
+          </h2>
+          <form className="my-8" onSubmit={handleSubmit}>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="projectName">Project Name</Label>
+              <Input
+                id="projectName"
+                placeholder="Amazon reforestation initiative...."
+                type="text"
+                value={projectName}
+                onChange={(e) => setProjectName(e.target.value)}
+              />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="projectSymbol">Project Symbol</Label>
+              <Input
+                id="projectSymbol"
+                placeholder="AFI, OAS..."
+                type="text"
+                value={projectSymbol}
+                onChange={(e) => setProjectSymbol(e.target.value)}
+              />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="price">Price (in ETH)</Label>
+              <Input
+                id="price"
+                placeholder="in ETH"
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+              />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="treeTypes">Tree Types</Label>
+              <Input
+                id="treeTypes"
+                placeholder="Enter all tree types comma separated"
+                type="text"
+                value={treeTypes}
+                onChange={(e) => setTreeTypes(e.target.value)}
+              />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <div className="flex items-center">
+                <Label htmlFor="coordinates">
+                  GeoLocation
+                  <button
+                    type="button"
+                    onClick={handleGetCoordinates}
+                    className="rounded-full p-2"
+                  >
+                    📍
+                  </button>
+                </Label>
+              </div>
+
+              <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
+                <LabelInputContainer>
+                  <Label htmlFor="latitude">Latitude</Label>
+                  <Input
+                    id="latitude"
+                    placeholder="13.116519 / N 13° 6' 59.469''"
+                    type="text"
+                    value={latitude}
+                    onChange={(e) => setLatitude(e.target.value)}
+                  />
+                </LabelInputContainer>
+                <LabelInputContainer>
+                  <Label htmlFor="longitude">Longitude</Label>
+                  <Input
+                    id="longitude"
+                    placeholder="77.642146 / E 77° 38' 31.727''"
+                    type="text"
+                    value={longitude}
+                    onChange={(e) => setLongitude(e.target.value)}
+                  />
+                </LabelInputContainer>
+              </div>
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="numberTrees">Number of Trees</Label>
+              <Input
+                id="numberTrees"
+                placeholder="5000"
+                type="number"
+                min="0"
+                value={numberTrees}
+                onChange={(e) => setNumberTrees(e.target.value)}
+              />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="circumference">
+                Circumference (approx. in cm)
+              </Label>
+              <Input
+                id="circumference"
+                placeholder="50"
+                type="number"
+                min="0"
+                value={circumference}
+                onChange={(e) => setCircumference(e.target.value)}
+              />
+            </LabelInputContainer>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="age">Age (avg.)</Label>
+              <Input
+                id="age"
+                placeholder="70"
+                type="number"
+                min="0"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+              />
+            </LabelInputContainer>
+
+            {carbonCredits && (
+              <LabelInputContainer className="mb-4">
+                <Label htmlFor="carbonCredits">
+                  Carbon Credits Initialized
+                </Label>
+                <Input
+                  id="carbonCredits"
+                  placeholder="70"
+                  type="number"
+                  min="0"
+                  disabled
+                  value={carbonCredits}
+                />
+              </LabelInputContainer>
+            )}
+
+            <button
+              className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+              type="submit"
+            >
+              {carbonCredits ? "Submit for Deployment" : "Enter"}
+              <BottomGradient />
+            </button>
+
+            <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const BottomGradient = () => {
+  return (
+    <>
+      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+    </>
+  );
+};
+
+const LabelInputContainer = ({ children, className }) => {
+  return (
+    <div className={cn("flex flex-col space-y-2 w-full", className)}>
+      {children}
+    </div>
+  );
+};
+
+export default ProjectRegistration;E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Signup.jsx  
+import React, { useRef } from "react";
+import { Label } from "./ui/Label";
+import { Input } from "./ui/Input";
+import { useState } from "react";
+import { cn } from "../utils/cn";
+import { Direction } from "./Direction";
+import {
+  IconBrandGithub,
+  IconBrandGoogle,
+  IconBrandOnlyfans,
+} from "@tabler/icons-react";
+
+import { backendUrl } from "../App";
+import { useDispatch } from "react-redux";
+import { dataActions } from "../store/data-slice";
+
+export function Signup() {
+
+  const [file, setFile] = useState(null);
+  const [fileLink, setFileLink] = useState(null);
+  const [carbonCredits, setCarbonCredits] = useState(null);
+  const [metaData, setMetaData] = useState(null);
+
+  const dispatch = useDispatch();
+
+  async function deployContract(){
+    const bodyData = {
+      
+    }
+
+    try{
+      const response = await fetch(`${backendUrl}/contract/deploy`,{
+        method : 'POST',
+        body : JSON.stringify(bodyData)
+      });
+      const res = await response.json();
+      dispatch(dataActions.appendContract(res.contract));
+    }
+    catch(e){
+      console.log(e)
+    }
+  }
+
+  async function sendMetaData(){
+    const bodyData = {
+      image : fileLink,
+      desc : "",
+      treeTypes : [],
+      lattitude : "",
+      longitude : "",
+      numberTrees : 0,
+      age : 0,
+      circumference : 50
+    }
+
+    try{
+      const response = await fetch(`${backendUrl}/contract/deploy`,{
+        method : 'POST',
+        body : JSON.stringify(bodyData)
+      });
+      const res = await response.json();
+      dispatch(dataActions.appendContract(res.contract));
+    }
+    catch(e){
+      console.log(e)
+    }
+  }
+
+  function calculateCarbonCredits(){
+    setCarbonCredits(15);
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // if(carbonCredits){
+    //   deployContract();
+    // }
+    // else{
+    //   sendMetaData();
+    // }
+    console.log(e.target.values)
+  };
+
+  const inputRef = useRef();
+
+  const getFileLink = async () => {
+    if (file) {
+      console.log(file);
+      const formData = new FormData();
+      formData.append('file',file);
+
+      const response = await fetch(`${backendUrl}/cloudinary/upload`,{
+        method : 'POST',
+        body : formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+  
+      const res = await response.json();
+      if(res?.url){
+        setFileLink(res.url);
+      }
+
+      else{
+        console.log('Something went wrong on the backend...')
+      }
+    }
+    else{
+      console.log('File not selected');
+    }
+  }
+
+  const handleGetCoordinates = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          document.getElementById("latitude").value = latitude;
+          document.getElementById("longitude").value = longitude;
+        },
+        (error) => {
+          console.error("Error getting coordinates: ", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+    }
+  };
+  return (<div className="flex justify-center items-center ">
+    <div className="m-5">
+    <div className="h-[40rem] w-40rem min-w-[40rem] flex items-center justify-center overflow-hidden">
+      { fileLink ? <img src={fileLink} alt="preview" className="object-cover h-full w-full" /> : <div className="h-full w-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center" onClick={()=>{
+        inputRef.current.click();
+      }}>
+        <input type="file" hidden onChange={(e)=>{
+          setFile(e.target.files[0]);
+          getFileLink()
+        }} 
+        ref={inputRef}
+        />
+        📸
+        </div>}
+    </div>
+    </div>
+    <div>   
+         <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-transparent dark:bg-black al">
+      <h2 className="font-bold text-xl text-neutral-800 dark:text-neutral-200">
+        New Project Registration
+      </h2>
+      <form className="my-8" onSubmit={handleSubmit}>
+        
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="projectName">Project Name</Label>
+          <Input id="projectName" placeholder="Amazon reforestation initiative...." type="text" />
+        </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="projectSymbol">Project Symbol</Label>
+          <Input id="projectSymbol" placeholder="AFI, OAS..." type="text" />
+        </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="treeTypes">Tree Types</Label>
+          <Input id="treeTypes" placeholder="Enter all tree types comma seperated" type="text" />
+        </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+        <div className='flex items-center'>
+            <Label htmlFor="coordinates">
+                GeoLocation            
+            <button
+                type="button"
+                onClick={handleGetCoordinates}
+                className="rounded-full p-2"
+            >
+                📍
+            </button>
+            </Label>
+        </div>
+
+        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
+          <LabelInputContainer>
+            <Label htmlFor="latitude">Latitude</Label>
+            <Input id="latitude" placeholder="13.116519 / N 13° 6' 59.469''" type="text" />
+          </LabelInputContainer>
+          <LabelInputContainer>
+            <Label htmlFor="longitude">Longitude</Label>
+            <Input id="longitude" placeholder="77.642146 / E 77° 38' 31.727''" type="text" />
+          </LabelInputContainer>
+        </div>
+        </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="numberTrees">Number of Trees</Label>
+          <Input id="numberTrees" placeholder="5000" type="number"  min="0" />
+        </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="cirecumference">Circumference (approx. in cm)</Label>
+          <Input id="circumfrence" placeholder="50" type="number"  min="0" />
+        </LabelInputContainer>
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="age">Age (avg.) </Label>
+          <Input id="age" placeholder="70" type="number"  min="0"/>
+        </LabelInputContainer>
+        
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="number">Age (avg.) </Label>
+          <Input id="number" placeholder="70" type="number"  min="0"/>
+        </LabelInputContainer>
+
+        { carbonCredits && <LabelInputContainer className="mb-4">
+          <Label htmlFor="carbonCredits">Carbon Credits Initialised</Label>
+          <Input id="carbonCredits" placeholder="70" type="number"  min="0" disabled value={carbonCredits}/>
+        </LabelInputContainer> }
+
+        <button
+          className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+          type="submit"
+        >
+          { carbonCredits ? "Submit for Deployment" : "Enter"} 
+          <BottomGradient />
+        </button>
+
+        <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
+
+        <div className="flex flex-col space-y-4">
+          
+          
+        </div>
+      </form>
+    </div>
+    </div>
+  </div>
+
+  );
+}
+
+const BottomGradient = () => {
+  return (
+    <>
+      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+    </>
+  );
+};
+
+const LabelInputContainer = ({ children, className }) => {
+  return (
+    <div className={cn("flex flex-col space-y-2 w-full", className)}>
+      {children}
+    </div>
+  );
+};
+export default Signup;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\StickyScrollRevalDemo.jsx  
+import React from "react";
+import { StickyScroll } from "./ui/sticky-scroll-reveal";
+
+const content = [
+  {
+    title: "Collaborative Editing",
+    description:
+      "Work together in real time with your team, clients, and stakeholders. Collaborate on documents, share ideas, and make decisions quickly. With our platform, you can streamline your workflow and increase productivity.",
+    content: (
+      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--cyan-500),var(--emerald-500))] flex items-center justify-center text-white">
+        Collaborative Editing
+      </div>
+    ),
+  },
+  {
+    title: "Real time changes",
+    description:
+      "See changes as they happen. With our platform, you can track every modification in real time. No more confusion about the latest version of your project. Say goodbye to the chaos of version control and embrace the simplicity of real-time updates.",
+    content: (
+      <div className="h-full w-full  flex items-center justify-center text-white">
+        <img
+          src="/linear.webp"
+          width={300}
+          height={300}
+          className="h-full w-full object-cover"
+          alt="linear board demo"
+        />
+      </div>
+    ),
+  },
+  {
+    title: "Version control",
+    description:
+      "Experience real-time updates and never stress about version control again. Our platform ensures that you're always working on the most recent version of your project, eliminating the need for constant manual updates. Stay in the loop, keep your team aligned, and maintain the flow of your work without any interruptions.",
+    content: (
+      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--orange-500),var(--yellow-500))] flex items-center justify-center text-white">
+        Version control
+      </div>
+    ),
+  },
+  {
+    title: "Running out of content",
+    description:
+      "Experience real-time updates and never stress about version control again. Our platform ensures that you're always working on the most recent version of your project, eliminating the need for constant manual updates. Stay in the loop, keep your team aligned, and maintain the flow of your work without any interruptions.",
+    content: (
+      <div className="h-full w-full bg-[linear-gradient(to_bottom_right,var(--cyan-500),var(--emerald-500))] flex items-center justify-center text-white">
+        Running out of content
+      </div>
+    ),
+  },
+];
+function StickyScrollRevealDemo() {
+  return (
+    <div className="p-10 ">
+      <StickyScroll content={content} />
+    </div>
+  );
+}
+
+export default StickyScrollRevealDemo;E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ThreeD.jsx  
+import React, { createContext, useState, useContext, useRef, useEffect } from "react";
+import { cn } from "../utils/cn";
+
+const MouseEnterContext = createContext();
+
+export const CardContainer = ({ children, className, containerClassName }) => {
+  const containerRef = useRef(null);
+  const [isMouseEntered, setIsMouseEntered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    if (!containerRef.current) return;
+    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - left - width / 2) / 25;
+    const y = (e.clientY - top - height / 2) / 25;
+    containerRef.current.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+  };
+
+  const handleMouseEnter = () => {
+    setIsMouseEntered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (!containerRef.current) return;
+    setIsMouseEntered(false);
+    containerRef.current.style.transform = `rotateY(0deg) rotateX(0deg)`;
+  };
+
+  return (
+    <MouseEnterContext.Provider value={[isMouseEntered, setIsMouseEntered]}>
+      <div
+        className={`py-20 flex items-center justify-center ${containerClassName}`}
+        style={{ perspective: "1000px" }}
+      >
+        <div
+          ref={containerRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className={`flex items-center justify-center relative transition-all duration-200 ease-linear ${className}`}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {children}
+        </div>
+      </div>
+    </MouseEnterContext.Provider>
+  );
+};
+
+export const CardBody = ({ children, className }) => {
+  return (
+    <div className={`h-96 w-96 [transform-style:preserve-3d] [&>*]:[transform-style:preserve-3d] ${className}`}>
+      {children}
+    </div>
+  );
+};
+
+export const CardItem = ({
+  as: Tag = "div",
+  children,
+  className,
+  translateX = 0,
+  translateY = 0,
+  translateZ = 0,
+  rotateX = 0,
+  rotateY = 0,
+  rotateZ = 0,
+  ...rest
+}) => {
+  const ref = useRef(null);
+  const [isMouseEntered] = useMouseEnter();
+
+  useEffect(() => {
+    handleAnimations();
+  }, [isMouseEntered]);
+
+  const handleAnimations = () => {
+    if (!ref.current) return;
+    if (isMouseEntered) {
+      ref.current.style.transform = `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
+    } else {
+      ref.current.style.transform = `translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)`;
+    }
+  };
+
+  return (
+    <Tag ref={ref} className={`w-fit transition duration-200 ease-linear ${className}`} {...rest}>
+      {children}
+    </Tag>
+  );
+};
+
+export const useMouseEnter = () => {
+  const context = useContext(MouseEnterContext);
+  if (context === undefined) {
+    throw new Error("useMouseEnter must be used within a MouseEnterProvider");
+  }
+  return context;
+};
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ThreeDCardDemo.jsx  
+import React from "react";
+import { CardBody, CardContainer, CardItem } from "./ThreeD"; // Adjust the import path if needed
+
+export function ThreeDCardDemo({ className }) {
+  return (
+    <CardContainer className={`inter-var ${className}`}>
+      <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[20rem] h-auto rounded-xl p-4 border">
+        <CardItem translateZ="50" className="text-lg font-bold text-neutral-600 dark:text-white">
+          Register your Credits
+        </CardItem>
+        
+        <CardItem translateZ="100" className="w-full mt-4">
+          <a
+            href="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block h-48 w-full bg-cover bg-center rounded-xl group-hover/card:shadow-xl"
+            style={{
+              backgroundImage:
+                "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+            }}
+          >
+            {/* Add any content inside the link if needed */}
+          </a>
+        </CardItem>
+        <div className="flex justify-between items-center mt-10">
+          <CardItem translateZ={20} as="a" href="https://twitter.com/mannupaaji" target="_blank" className="px-4 py-2 rounded-xl text-xs font-normal dark:text-white">
+            Try now →
+          </CardItem>
+          
+        </div>
+      </CardBody>
+    </CardContainer>
+  );
+}
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\Tokens.jsx  
+import { useSelector, useDispatch } from "react-redux"
+import { backendUrl } from "../App"
+import { dataActions } from "../store/data-slice";
+import { useNavigate } from "react-router-dom";
+
+export default function Tokens(){
+
+    const contracts = useSelector((state)=>state.data.contracts);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const getContracts = async()=>{
+        try{
+            const response = await fetch(`${backendUrl}/contract/getAll`);
+            const data = await response.json();
+            console.log('data:', data);
+            if(data.success){
+                dispatch(dataActions.setContracts(data.contracts));
+            }
+        }
+        catch(err){
+            console.log('error:', err);
+        }
+    }
+
+    const handleRouting = (address)=>{
+        console.log('address:', address);
+        navigate(`/token/${address}`);
+    };
+
+    return (
+        <>
+        <div className="text-2xl text-center font-semibold">Tokens MarketPlace</div>
+        {contracts.length !== 0 && <table className="min-w-full bg-white border border-gray-200 shadow-md rounded-lg overflow-hidden my-4">
+            <thead className="bg-slate-800 text-gray-800 uppercase text-sm leading-normal">
+                <tr>
+                    <th className="py-3 px-6 text-left">Project / Institution</th>
+                    <th className="py-3 px-6 text-left">Symbol</th>
+                    <th className="py-3 px-6 text-left">Initial Supply</th>
+                    <th className="py-3 px-6 text-left">Sale Price (ETH)</th>
+                    <th className="py-3 px-6 text-left">Available Tokens</th>
+                    <th className="py-3 px-6 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody className="text-gray-600 text-sm font-light">
+                {contracts.map((contract,index)=>{
+                    return (
+                        <tr className="border-b border-gray-200 hover:bg-gray-50" key={index}>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{contract.name}</td>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{contract.symbol}</td>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{contract.initialSupply}</td>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{parseFloat(contract.salePrice, 4)*84}$</td>
+                            <td className="py-3 px-6 text-left whitespace-nowrap">{contract.availableTokens}</td>
+                            <td className="py-3 px-6 text-center">
+                                <button onClick={()=>{
+                                    handleRouting(contract.address)
+                                }} className="bg-green-400 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-full">
+                                    Buy
+                                </button>
+                            </td>
+                        </tr>
+                    )
+                })}
+            </tbody>
+        </table>}
+        {
+            contracts.length === 0 && <div>Loading...</div>
+        }
+        </>
+
+    )
+}E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\CarbonFootprintCalculator.css  
+.calculator {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+h1 {
+  text-align: center;
+  color: #082b09;
+  font-weight: bold;
+}
+
+h2 {
+  color: #333;
+
+  padding-bottom: 5px;
+}
+
+.formula-box {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.formula-box p {
+  margin: 5px 0;
+}
+
+.total .formula-box {
+}E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\CarbonCreditCalculator.jsx  
+import React, { useState } from "react";
+
+export const CarbonCreditCalculator = () => {
+  const [quantity, setQuantity] = useState(0);
+  const price = 20; // Example price per unit
+  const total = quantity * price;
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+        <div className="flex flex-col mb-4">
+          <label htmlFor="quantity" className="mb-2 font-semibold">
+            Quantity
+          </label>
+          <input
+            type="number"
+            id="quantity"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            className="p-2 border rounded"
+          />
+        </div>
+        <div className="flex flex-col mb-4">
+          <div className="flex justify-between mb-2">
+            <span className="font-semibold">Price per unit</span>
+            <div className="p-2 bg-gray-200 rounded">{price}</div>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-semibold">Total</span>
+            <div className="p-2 bg-gray-200 rounded">{total}</div>
+          </div>
+        </div>
+        <button className="mt-4 w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          Calculate
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CarbonCreditCalculator;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\CardContainer.jsx  
+import React, { createContext, useState, useContext, useRef, useEffect } from "react";
+import { cn } from "../../utils/cn";
+
+// Utility function for conditional class names (assumes a similar function exists in your project)
+function cn(...classes) {
+  return classes.filter(Boolean).join(' ');
+}
+
+const MouseEnterContext = createContext();
+
+export const CardContainer = ({ children, className, containerClassName }) => {
+  const containerRef = useRef(null);
+  const [isMouseEntered, setIsMouseEntered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    if (!containerRef.current) return;
+    const { left, top, width, height } = containerRef.current.getBoundingClientRect();
+    const x = (e.clientX - left - width / 2) / 25;
+    const y = (e.clientY - top - height / 2) / 25;
+    containerRef.current.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
+  };
+
+  const handleMouseEnter = () => {
+    setIsMouseEntered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (!containerRef.current) return;
+    setIsMouseEntered(false);
+    containerRef.current.style.transform = `rotateY(0deg) rotateX(0deg)`;
+  };
+
+  return (
+    <MouseEnterContext.Provider value={[isMouseEntered, setIsMouseEntered]}>
+      <div
+        className={cn("py-20 flex items-center justify-center", containerClassName)}
+        style={{ perspective: "1000px" }}
+      >
+        <div
+          ref={containerRef}
+          onMouseEnter={handleMouseEnter}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          className={cn("flex items-center justify-center relative transition-all duration-200 ease-linear", className)}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {children}
+        </div>
+      </div>
+    </MouseEnterContext.Provider>
+  );
+};
+
+export const CardBody = ({ children, className }) => {
+  return (
+    <div className={cn("h-96 w-96 [transform-style:preserve-3d] [&>*]:[transform-style:preserve-3d]", className)}>
+      {children}
+    </div>
+  );
+};
+
+export const CardItem = ({
+  as: Tag = "div",
+  children,
+  className,
+  translateX = 0,
+  translateY = 0,
+  translateZ = 0,
+  rotateX = 0,
+  rotateY = 0,
+  rotateZ = 0,
+  ...rest
+}) => {
+  const ref = useRef(null);
+  const [isMouseEntered] = useMouseEnter();
+
+  useEffect(() => {
+    handleAnimations();
+  }, [isMouseEntered]);
+
+  const handleAnimations = () => {
+    if (!ref.current) return;
+    if (isMouseEntered) {
+      ref.current.style.transform = `translateX(${translateX}px) translateY(${translateY}px) translateZ(${translateZ}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`;
+    } else {
+      ref.current.style.transform = `translateX(0px) translateY(0px) translateZ(0px) rotateX(0deg) rotateY(0deg) rotateZ(0deg)`;
+    }
+  };
+
+  return (
+    <Tag ref={ref} className={cn("w-fit transition duration-200 ease-linear", className)} {...rest}>
+      {children}
+    </Tag>
+  );
+};
+
+export const useMouseEnter = () => {
+  const context = useContext(MouseEnterContext);
+  if (context === undefined) {
+    throw new Error("useMouseEnter must be used within a MouseEnterProvider");
+  }
+  return context;
+};
+
+export function ThreeDCardDemo() {
+  return (
+    <CardContainer className="inter-var">
+      <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[30rem] h-auto rounded-xl p-6 border">
+        <CardItem translateZ="50" className="text-xl font-bold text-neutral-600 dark:text-white">
+          Make things float in air
+        </CardItem>
+        <CardItem as="p" translateZ="60" className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300">
+          Hover over this card to unleash the power of CSS perspective
+        </CardItem>
+        <CardItem translateZ="100" className="w-full mt-4">
+          <a
+            href="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block h-60 w-full bg-cover bg-center rounded-xl group-hover/card:shadow-xl"
+            style={{
+              backgroundImage: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=2560&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')",
+            }}
+          >
+            {/* Add any content inside the link if needed */}
+          </a>
+        </CardItem>
+        <div className="flex justify-between items-center mt-20">
+          <CardItem translateZ={20} as="a" href="https://twitter.com/mannupaaji" target="_blank" className="px-4 py-2 rounded-xl text-xs font-normal dark:text-white">
+            Try now →
+          </CardItem>
+          <CardItem translateZ={20} as="button" className="px-4 py-2 rounded-xl bg-black dark:bg-white dark:text-black text-white text-xs font-bold">
+            Sign up
+          </CardItem>
+        </div>
+      </CardBody>
+    </CardContainer>
+  );
+}
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\DirectionAwareHover.jsx  
+import React, { useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { cn } from "../../utils/cn";
+
+export const DirectionAwareHover = ({
+  imageUrl,
+  children,
+  childrenClassName,
+  imageClassName,
+  className,
+}) => {
+  const ref = useRef(null);
+
+  const [direction, setDirection] = useState("left");
+
+  const handleMouseEnter = (event) => {
+    if (!ref.current) return;
+
+    const direction = getDirection(event, ref.current);
+    console.log("direction", direction);
+    switch (direction) {
+      case 0:
+        setDirection("top");
+        break;
+      case 1:
+        setDirection("right");
+        break;
+      case 2:
+        setDirection("bottom");
+        break;
+      case 3:
+        setDirection("left");
+        break;
+      default:
+        setDirection("left");
+        break;
+    }
+  };
+
+  const getDirection = (ev, obj) => {
+    const { width: w, height: h, left, top } = obj.getBoundingClientRect();
+    const x = ev.clientX - left - (w / 2) * (w > h ? h / w : 1);
+    const y = ev.clientY - top - (h / 2) * (h > w ? w / h : 1);
+    const d = Math.round(Math.atan2(y, x) / 1.57079633 + 5) % 4;
+    return d;
+  };
+
+  const variants = {
+    initial: {
+      x: 0,
+    },
+    exit: {
+      x: 0,
+      y: 0,
+    },
+    top: {
+      y: 20,
+    },
+    bottom: {
+      y: -20,
+    },
+    left: {
+      x: 20,
+    },
+    right: {
+      x: -20,
+    },
+  };
+
+  const textVariants = {
+    initial: {
+      y: 0,
+      x: 0,
+      opacity: 0,
+    },
+    exit: {
+      y: 0,
+      x: 0,
+      opacity: 0,
+    },
+    top: {
+      y: -20,
+      opacity: 1,
+    },
+    bottom: {
+      y: 2,
+      opacity: 1,
+    },
+    left: {
+      x: -2,
+      opacity: 1,
+    },
+    right: {
+      x: 20,
+      opacity: 1,
+    },
+  };
+
+  return (
+    <motion.div
+      onMouseEnter={handleMouseEnter}
+      ref={ref}
+      className={cn(
+        "md:h-96 w-60 h-60 md:w-96 bg-transparent rounded-lg overflow-hidden group/card relative",
+        className
+      )}
+    >
+      <AnimatePresence>
+        <motion.div
+          className="relative h-full w-full"
+          initial="initial"
+          whileHover={direction}
+          exit="exit"
+        >
+          <div className="group-hover/card:block hidden absolute inset-0 w-full h-full bg-black/40 z-10 transition duration-500" />
+          <motion.div
+            variants={variants}
+            className="h-full w-full relative bg-gray-50 dark:bg-black"
+            transition={{
+              duration: 0.2,
+              ease: "easeOut",
+            }}
+          >
+            <img
+              alt="image"
+              className={cn(
+                "h-full w-full object-cover scale-[1.15]",
+                imageClassName
+              )}
+              src={imageUrl}
+            />
+          </motion.div>
+          <motion.div
+            variants={textVariants}
+            transition={{
+              duration: 0.5,
+              ease: "easeOut",
+            }}
+            className={cn(
+              "text-white absolute bottom-4 left-4 z-40",
+              childrenClassName
+            )}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+export default DirectionAwareHover;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\Hero.jsx  
+import React from "react";
+import { cn } from "../../utils/cn";
+
+const AuroraBackground = ({
+  className,
+  children,
+  showRadialGradient = true,
+  ...props
+}) => {
+  return (
+    <main>
+      <div
+        className={cn(
+          "relative flex flex-col h-[100vh] items-center justify-center bg-zinc-50 dark:bg-zinc-900 text-slate-950 transition-bg",
+          className
+        )}
+        {...props}
+      >
+        <div className="absolute inset-0 overflow-hidden">
+          <div
+            className={cn(
+              `
+            [--white-gradient:repeating-linear-gradient(100deg,var(--white)_0%,var(--white)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--white)_16%)]
+            [--dark-gradient:repeating-linear-gradient(100deg,var(--black)_0%,var(--black)_7%,var(--transparent)_10%,var(--transparent)_12%,var(--black)_16%)]
+            [--aurora:repeating-linear-gradient(100deg,var(--blue-500)_10%,var(--indigo-300)_15%,var(--blue-300)_20%,var(--violet-200)_25%,var(--blue-400)_30%)]
+            [background-image:var(--white-gradient),var(--aurora)]
+            dark:[background-image:var(--dark-gradient),var(--aurora)]
+            [background-size:300%,_200%]
+            [background-position:50%_50%,50%_50%]
+            filter blur-[10px] invert dark:invert-0
+            after:content-[""] after:absolute after:inset-0 after:[background-image:var(--white-gradient),var(--aurora)] 
+            after:dark:[background-image:var(--dark-gradient),var(--aurora)]
+            after:[background-size:200%,_100%] 
+            after:animate-aurora after:[background-attachment:fixed] after:mix-blend-difference
+            pointer-events-none
+            absolute -inset-[10px] opacity-50 will-change-transform`,
+              showRadialGradient &&
+                `[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`
+            )}
+          ></div>
+        </div>
+        {children}
+      </div>
+    </main>
+  );
+};
+
+export default AuroraBackground;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\Input.jsx  
+"use client";
+import * as React from "react";
+import { cn } from "../../utils/cn";
+import { useMotionTemplate, useMotionValue, motion } from "framer-motion";
+
+const Input = React.forwardRef((props, ref) => {
+  const { className, type, ...rest } = props;
+  const radius = 100; // change this to increase the radius of the hover effect
+  const [visible, setVisible] = React.useState(false);
+
+  let mouseX = useMotionValue(0);
+  let mouseY = useMotionValue(0);
+
+  function handleMouseMove(event) {
+    const { currentTarget, clientX, clientY } = event;
+    const { left, top } = currentTarget.getBoundingClientRect();
+
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  return (
+    <motion.div
+      style={{
+        background: useMotionTemplate`
+          radial-gradient(
+            ${visible ? radius + "px" : "0px"} circle at ${mouseX}px ${mouseY}px,
+            var(--blue-500),
+            transparent 80%
+          )
+        `,
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+      className="p-[2px] rounded-lg transition duration-300 group/input"
+    >
+      <input
+        type={type}
+        className={cn(
+          `flex h-10 w-full border-none bg-gray-50 dark:bg-zinc-800 text-black dark:text-white shadow-input rounded-md px-3 py-2 text-sm file:border-0 file:bg-transparent 
+          file:text-sm file:font-medium placeholder:text-neutral-400 dark:placeholder-text-neutral-600 
+          focus-visible:outline-none focus-visible:ring-[2px] focus-visible:ring-neutral-400 dark:focus-visible:ring-neutral-600
+           disabled:cursor-not-allowed disabled:opacity-50
+           dark:shadow-[0px_0px_1px_1px_var(--neutral-700)]
+           group-hover/input:shadow-none transition duration-400`,
+          className
+        )}
+        ref={ref}
+        {...rest}
+      />
+    </motion.div>
+  );
+});
+
+Input.displayName = "Input";
+
+export { Input };
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\Label.jsx  
+"use client";
+import * as React from "react";
+import * as LabelPrimitive from "@radix-ui/react-label";
+import { cn } from "../../utils/cn";
+
+const Label = React.forwardRef((props, ref) => {
+  const { className, ...rest } = props;
+  
+  return (
+    <LabelPrimitive.Root
+      ref={ref}
+      className={cn(
+        "text-sm font-medium text-black dark:text-white leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        className
+      )}
+      {...rest}
+    />
+  );
+});
+
+Label.displayName = LabelPrimitive.Root.displayName;
+
+export { Label };
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\LayoutGrid.jsx  
+"use client";
+
+import React, { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { cn } from "../../utils/cn"; // Adjust the path as necessary
+
+export const LayoutGrid = ({ cards }) => {
+  const [selected, setSelected] = useState(null);
+  const [lastSelected, setLastSelected] = useState(null);
+
+  const handleClick = (card) => {
+    setLastSelected(selected);
+    setSelected(card);
+  };
+
+  const handleOutsideClick = () => {
+    setLastSelected(selected);
+    setSelected(null);
+  };
+
+  return (
+    <div className="w-full h-full p-10 grid grid-cols-1 md:grid-cols-3 max-w-7xl mx-auto gap-4 relative">
+      {cards.map((card, i) => (
+        <div key={i} className={cn(card.className, "")}>
+          <motion.div
+            onClick={() => handleClick(card)}
+            className={cn(
+              card.className,
+              "relative overflow-hidden",
+              selected?.id === card.id
+                ? "rounded-lg cursor-pointer absolute inset-0 h-1/2 w-full md:w-1/2 m-auto z-50 flex justify-center items-center flex-wrap flex-col"
+                : lastSelected?.id === card.id
+                ? "z-40 bg-white rounded-xl h-full w-full"
+                : "bg-white rounded-xl h-full w-full"
+            )}
+            layout
+          >
+            {selected?.id === card.id && <SelectedCard selected={selected} />}
+            <BlurImage card={card} />
+          </motion.div>
+        </div>
+      ))}
+      <motion.div
+        onClick={handleOutsideClick}
+        className={cn(
+          "absolute h-full w-full left-0 top-0 bg-black opacity-0 z-10",
+          selected?.id ? "pointer-events-auto" : "pointer-events-none"
+        )}
+        animate={{ opacity: selected?.id ? 0.3 : 0 }}
+      />
+    </div>
+  );
+};
+
+const BlurImage = ({ card }) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <img
+      src={card.thumbnail}
+      height="500"
+      width="500"
+      onLoad={() => setLoaded(true)}
+      className={cn(
+        "object-cover object-top absolute inset-0 h-full w-full transition duration-200",
+        loaded ? "blur-none" : "blur-md"
+      )}
+      alt="thumbnail"
+    />
+  );
+};
+
+const SelectedCard = ({ selected }) => {
+  return (
+    <div className="bg-transparent h-full w-full flex flex-col justify-end rounded-lg shadow-2xl relative z-[60]">
+      <motion.div
+        initial={{
+          opacity: 0,
+        }}
+        animate={{
+          opacity: 0.6,
+        }}
+        className="absolute inset-0 h-full w-full bg-black opacity-60 z-10"
+      />
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: 100,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+        }}
+        transition={{
+          duration: 0.3,
+          ease: "easeInOut",
+        }}
+        className="relative px-8 pb-4 z-[70]"
+      >
+        {selected?.content}
+      </motion.div>
+    </div>
+  );
+};
+
+export default LayoutGrid;
+E:\Bunny\Capstone_2025\web_portal\frontend\src\Components\ui\sticky-scroll-reveal.jsx  
+import { cn } from "../../utils/cn";
+"use client";
+import React, { useEffect, useRef, useState } from "react";
+import { useMotionValueEvent, useScroll } from "framer-motion";
+import { motion } from "framer-motion";
+
+
+export const StickyScroll = ({ content, contentClassName }) => {
+  const [activeCard, setActiveCard] = useState(0);
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({
+    // uncomment line 22 and comment line 23 if you DONT want the overflow container and want to have it change on the entire page scroll
+    // target: ref
+    container: ref,
+    offset: ["start start", "end start"],
+  });
+  const cardLength = content.length;
+
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    const cardsBreakpoints = content.map((_, index) => index / cardLength);
+    const closestBreakpointIndex = cardsBreakpoints.reduce((acc, breakpoint, index) => {
+      const distance = Math.abs(latest - breakpoint);
+      if (distance < Math.abs(latest - cardsBreakpoints[acc])) {
+        return index;
+      }
+      return acc;
+    }, 0);
+    setActiveCard(closestBreakpointIndex);
+  });
+
+  const backgroundColors = [
+    "var(--slate-900)",
+    "var(--black)",
+    "var(--neutral-900)",
+  ];
+  const linearGradients = [
+    "linear-gradient(to bottom right, var(--cyan-500), var(--emerald-500))",
+    "linear-gradient(to bottom right, var(--pink-500), var(--indigo-500))",
+    "linear-gradient(to bottom right, var(--orange-500), var(--yellow-500))",
+  ];
+
+  const [backgroundGradient, setBackgroundGradient] = useState(linearGradients[0]);
+
+  useEffect(() => {
+    setBackgroundGradient(linearGradients[activeCard % linearGradients.length]);
+  }, [activeCard]);
+
+  return (
+    <motion.div
+      animate={{
+        backgroundColor: backgroundColors[activeCard % backgroundColors.length],
+      }}
+      className="h-[30rem] overflow-y-auto flex justify-center relative space-x-10 rounded-md p-10"
+      ref={ref}
+    >
+      <div className="div relative flex items-start px-4">
+        <div className="max-w-2xl">
+          {content.map((item, index) => (
+            <div key={item.title + index} className="my-20">
+              <motion.h2
+                initial={{ opacity: 0 }}
+                animate={{ opacity: activeCard === index ? 1 : 0.3 }}
+                className="text-2xl font-bold text-slate-100"
+              >
+                {item.title}
+              </motion.h2>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: activeCard === index ? 1 : 0.3 }}
+                className="text-kg text-slate-300 max-w-sm mt-10"
+              >
+                {item.description}
+              </motion.p>
+            </div>
+          ))}
+          <div className="h-40" />
+        </div>
+      </div>
+      <div
+        style={{ background: backgroundGradient }}
+        className={cn(
+          "hidden lg:block h-60 w-80 rounded-md bg-white sticky top-10 overflow-hidden",
+          contentClassName
+        )}
+      >
+        {content[activeCard].content ?? null}
+      </div>
+    </motion.div>
+  );
+};
+E:\Bunny\Capstone_2025\web_portal\frontend\src\store\data-slice.js  
+import { createSlice } from '@reduxjs/toolkit';
+
+const dataSlice = createSlice({
+    name: "data",
+    initialState: {
+        walletAddress: null,
+        contracts: [],
+        coords: {},
+        orderDetails : null,
+        thisContract : null,
+        thisContractAddress : null,
+        wallet : null,
+        tokens : null,
+        connectWalletRef : null,
+        walletBalance : [],
+    },
+    reducers: {
+        setWalletAddress(state, action) {
+            state.walletAddress = action.payload;
+        },
+        setCoords(state, action) {
+            state.coords = action.payload;
+        },
+        setContracts(state, action) {
+            state.contracts = action.payload;
+        },
+        setThisContract(state, action){
+            state.thisContract = action.payload;
+        },
+        setThisContractAddress(state, action){
+            state.thisContractAddress = action.payload;
+        },
+        setConnectWalletRef(state, action){
+            state.connectWalletRef = action.payload;
+        },
+        setWalletBalance(state, action){
+            state.walletBalance = action.payload;
+        }
+    }
+});
+
+export const dataActions = dataSlice.actions;
+export default dataSlice.reducer;E:\Bunny\Capstone_2025\web_portal\frontend\src\store\index.js  
+import dataReducer from './data-slice';
+import { configureStore } from '@reduxjs/toolkit';
+
+const store = configureStore({
+    reducer: {
+        data: dataReducer,
+    },
+});
+  
+export default store;E:\Bunny\Capstone_2025\web_portal\frontend\src\utils\cn.js  
+import {clsx} from "clsx";
+import {twMerge} from "tailwind-merge";
+
+export function cn(...inputs) {
+    return twMerge(clsx(inputs));
+}
